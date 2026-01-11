@@ -1,6 +1,7 @@
+<!-- markdownlint-disable MD033 -->
 # Alotame
 
-<img src="alotame.png" width=25% align=left>
+<img src=".github/alotame.png" width=25% align=left alt="Alotame Logo">
 
 A local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management.
 
@@ -53,7 +54,14 @@ Together with “allow” and “tame,” the name suggests gently controlling w
 
 It’s not meant to be deep—just a playful name that fits a tool which carefully decides what to allow.
 
-## Status
+## Contributions
+
+- Contribution guidelines:
+  - [CONTRIBUTING.md](./.github/CONTRIBUTING.md)
+- Planned features and improvements:
+  - [ROADMAP.md](./.github/ROADMAP.md)
+
+### Status
 
 🚧 Under active development. APIs and behavior may change.
 
