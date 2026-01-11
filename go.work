@@ -1,0 +1,6 @@
+go 1.25.5
+
+use (
+	.
+	./test/e2e/dns-resolver-check
+)

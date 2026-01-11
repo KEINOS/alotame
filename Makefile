@@ -11,4 +11,5 @@ lint:
 # Update dependencies
 update:
 	go get -u ./...
+	go work sync
 	go mod tidy
