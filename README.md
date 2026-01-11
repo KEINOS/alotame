@@ -1,47 +1,11 @@
+<!-- markdownlint-disable MD041 MD005 -->
+![Gopher as Alotame](alotame.png)
+
 # Alotame
 
-A human-friendly local web app for allowlist-first Blocky DNS management.
+A local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management.
 
-Alotame is a companion app for [Blocky](https://github.com/0xERR0R/blocky) that makes **allowlist-first DNS filtering practical for real households**.
-
-Instead of chasing ever-growing blocklists, Alotame starts from the opposite idea:
-**block everything by default, and only allow what you explicitly trust**.
-
----
-
-## What Alotame does
-
-In short:
-**Blocky blocks. Alotame decides to allow.**
-
-- Works alongside Blocky in **allowlist-first mode**
-- Provides a **local UI** to inspect blocked domains
-- Helps you **decide and add allowed domains safely**
-- Keeps Blocky as the enforcement layer — Alotame only manages intent
-
----
-
-## What problem does this solve?
-
-Blocklist-based DNS filtering is an endless game of catch-up. New malicious domains appear every day, and maintaining lists quickly becomes fragile.
-
-Allowlist-first filtering is far more robust — but also harder to operate.
-Non-technical users cannot easily tell *which domains must be allowed* for a site to work.
-
-Alotame exists to bridge that gap.
-
----
-
-## What Alotame is *not*
-
-- Not a DNS server
-- Not a replacement for Blocky, but a policy controller
-- Not a cloud service
-- Not a parental surveillance tool
-
-Alotame runs locally and stays under your control.
-
----
+> **Blocky blocks. Alotame decides what to allow.**
 
 ## Intended audience
 
@@ -51,15 +15,49 @@ Alotame runs locally and stays under your control.
 
 If you have ever thought *“allowlist is safer, but painful”*, this app is for you.
 
----
+## Overview
+
+- A companion app for Blocky to manage allowlist under your control
+- Admin web UI to:
+  - Inspect blocked domains from Blocky logs
+  - Simple allowlist management (view, add, remove)
+  - TOTP-based authentication to sign in securely
+
+Blocky remains the DNS enforcement layer. Alotame only manages the allowlist.
+
+## Use Case
+
+Blocklists are a never-ending chase.
+Allowlists are proactive and safer—but hard to live with in practice.
+
+An allowlist-first approach flips this model: Block everything by default, and only allow what you trust.
+
+It creates a safer and more predictable model for controlling network access.
+
+The remaining problem is usability.
+Running Blocky in allowlist-first mode is secure by design, but painful to operate in practice.
+
+Alotame shows what was blocked and lets you decide what should be allowed—with intention.
+
+## What This Is NOT
+
+- Not a DNS server (use Blocky)
+- Not a cloud service (runs locally)
+- Not a parental surveillance tool
+
+## About the name “Alotame”
+
+Alotame is a piece of wordplay combining the Japanese word 「改め」(aratame) with the English words “allow” and “tame”.
+
+「改め」(aratame) means “to revise” or “to make things right,” and loosely evokes the idea of a 「関所」(sekisho)—a checkpoint that decides what may pass.
+Together with “allow” and “tame,” the name suggests gently controlling what gets through.
+
+It’s not meant to be deep—just a playful name that fits a tool which carefully decides what to allow.
 
 ## Status
 
-Alotame is under active development.
-APIs, UI, and behavior may change until the first stable release.
-
----
+🚧 Under active development. APIs and behavior may change.
 
 ## License
 
-- [MIT License](./LICENSE), Copyright (c) 2026 KEINOS and Alotame Contributors
+[MIT License](./LICENSE) © 2026 KEINOS and Alotame Contributors
