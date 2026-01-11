@@ -1,7 +1,6 @@
-<!-- markdownlint-disable MD041 MD005 -->
-![Gopher as Alotame](alotame.png)
-
 # Alotame
+
+<img src="alotame.png" width=25% align=left>
 
 A local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management.
 
