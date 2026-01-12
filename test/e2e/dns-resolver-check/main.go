@@ -183,7 +183,7 @@ func main() {
 
 // parseArgs parses command line arguments and returns test configuration and remaining domains.
 func parseArgs(args []string) (TestConfig, []string) {
-	config := TestConfig{}
+	config := TestConfig{RequireAllow: nil, RequireDeny: nil}
 	domains := make([]string, 0)
 
 	for idx := 0; idx < len(args); idx++ {
@@ -305,27 +305,27 @@ func queryA(server, domain string) Result {
 				continue
 			}
 
-			return Result{Domain: domain, Status: statusError, Detail: err.Error()}
+			return Result{Domain: domain, Status: statusError, Detail: err.Error(), TestResult: ""}
 		}
 
 		if resp.Rcode == dns.RcodeNameError {
-			return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN"}
+			return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""}
 		}
 
 		if len(resp.Answer) == 0 {
-			return Result{Domain: domain, Status: statusBlocked, Detail: "no answer"}
+			return Result{Domain: domain, Status: statusBlocked, Detail: "no answer", TestResult: ""}
 		}
 
 		for _, ans := range resp.Answer {
 			if aRec, ok := ans.(*dns.A); ok {
 				if aRec.A.String() != "0.0.0.0" {
-					return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String()}
+					return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String(), TestResult: ""}
 				}
 			}
 		}
 
-		return Result{Domain: domain, Status: statusBlocked, Detail: "only null IPs"}
+		return Result{Domain: domain, Status: statusBlocked, Detail: "only null IPs", TestResult: ""}
 	}
 
-	return Result{Domain: domain, Status: statusError, Detail: lastErr.Error()}
+	return Result{Domain: domain, Status: statusError, Detail: lastErr.Error(), TestResult: ""}
 }

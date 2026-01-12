@@ -115,7 +115,7 @@ func TestParseArgs(t *testing.T) {
 		{
 			name:            "no options",
 			args:            []string{"domain1.com", "domain2.com"},
-			expectedConfig:  TestConfig{},
+			expectedConfig:  TestConfig{RequireAllow: nil, RequireDeny: nil},
 			expectedDomains: []string{"domain1.com", "domain2.com"},
 		},
 		{
@@ -123,6 +123,7 @@ func TestParseArgs(t *testing.T) {
 			args: []string{"--require_allow", "allow1.com,allow2.com"},
 			expectedConfig: TestConfig{
 				RequireAllow: []string{"allow1.com", "allow2.com"},
+				RequireDeny:  nil,
 			},
 			expectedDomains: []string{},
 		},
@@ -130,7 +131,8 @@ func TestParseArgs(t *testing.T) {
 			name: "require_deny only",
 			args: []string{"--require_deny", "deny1.com,deny2.com"},
 			expectedConfig: TestConfig{
-				RequireDeny: []string{"deny1.com", "deny2.com"},
+				RequireAllow: nil,
+				RequireDeny:  []string{"deny1.com", "deny2.com"},
 			},
 			expectedDomains: []string{},
 		},
@@ -146,7 +148,7 @@ func TestParseArgs(t *testing.T) {
 		{
 			name:            "empty args",
 			args:            []string{},
-			expectedConfig:  TestConfig{},
+			expectedConfig:  TestConfig{RequireAllow: nil, RequireDeny: nil},
 			expectedDomains: []string{},
 		},
 	}
