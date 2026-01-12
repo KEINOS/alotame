@@ -255,6 +255,8 @@ func TestValidateResults(t *testing.T) {
 // ----------------------------------------------------------------------------
 
 func TestQueryA_Integration(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -262,6 +264,8 @@ func TestQueryA_Integration(t *testing.T) {
 	const dnsServer = "1.1.1.1:53"
 
 	t.Run("query allowed domain", func(t *testing.T) {
+		t.Parallel()
+
 		result := queryA(dnsServer, "github.com")
 
 		require.Equal(t, "github.com", result.Domain)
@@ -271,6 +275,8 @@ func TestQueryA_Integration(t *testing.T) {
 	})
 
 	t.Run("query non-existent domain", func(t *testing.T) {
+		t.Parallel()
+
 		result := queryA(dnsServer, "this-domain-definitely-does-not-exist-xyz123.com")
 
 		assert.Equal(t, statusBlocked, result.Status)
@@ -279,6 +285,8 @@ func TestQueryA_Integration(t *testing.T) {
 }
 
 func TestE2ETestMode_Integration(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -286,6 +294,8 @@ func TestE2ETestMode_Integration(t *testing.T) {
 	const dnsServer = "1.1.1.1:53"
 
 	t.Run("all conditions met - exit 0", func(t *testing.T) {
+		t.Parallel()
+
 		config := TestConfig{
 			RequireAllow: []string{"github.com", "yahoo.com"},
 			RequireDeny:  []string{"this-domain-definitely-does-not-exist-xyz123.com"},
@@ -309,6 +319,8 @@ func TestE2ETestMode_Integration(t *testing.T) {
 	})
 
 	t.Run("condition not met - exit 1", func(t *testing.T) {
+		t.Parallel()
+
 		config := TestConfig{
 			RequireAllow: []string{"this-domain-definitely-does-not-exist-xyz123.com"},
 		}
@@ -321,6 +333,8 @@ func TestE2ETestMode_Integration(t *testing.T) {
 	})
 
 	t.Run("undetermined domains do not affect exit code", func(t *testing.T) {
+		t.Parallel()
+
 		config := TestConfig{
 			RequireAllow: []string{"github.com"},
 		}
@@ -341,6 +355,8 @@ func TestE2ETestMode_Integration(t *testing.T) {
 }
 
 func TestLegacyMode_NoTestResult(t *testing.T) {
+	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
