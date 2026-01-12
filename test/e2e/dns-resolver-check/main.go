@@ -167,7 +167,8 @@ func main() {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 
-	if err := encoder.Encode(results); err != nil {
+	err := encoder.Encode(results)
+	if err != nil {
 		log.Fatalf("failed to encode results: %v", err)
 	}
 
@@ -181,20 +182,20 @@ func parseArgs(args []string) (TestConfig, []string) {
 	config := TestConfig{}
 	domains := make([]string, 0)
 
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
+	for idx := 0; idx < len(args); idx++ {
+		switch args[idx] {
 		case "--require_allow":
-			if i+1 < len(args) {
-				config.RequireAllow = splitDomains(args[i+1])
-				i++
+			if idx+1 < len(args) {
+				config.RequireAllow = splitDomains(args[idx+1])
+				idx++
 			}
 		case "--require_deny":
-			if i+1 < len(args) {
-				config.RequireDeny = splitDomains(args[i+1])
-				i++
+			if idx+1 < len(args) {
+				config.RequireDeny = splitDomains(args[idx+1])
+				idx++
 			}
 		default:
-			domains = append(domains, args[i])
+			domains = append(domains, args[idx])
 		}
 	}
 
@@ -202,16 +203,16 @@ func parseArgs(args []string) (TestConfig, []string) {
 }
 
 // splitDomains splits a comma-separated list of domains.
-func splitDomains(s string) []string {
-	if s == "" {
+func splitDomains(str string) []string {
+	if str == "" {
 		return nil
 	}
 
-	parts := strings.Split(s, ",")
+	parts := strings.Split(str, ",")
 	result := make([]string, 0, len(parts))
 
-	for _, p := range parts {
-		if trimmed := strings.TrimSpace(p); trimmed != "" {
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
 			result = append(result, trimmed)
 		}
 	}
@@ -224,40 +225,40 @@ func splitDomains(s string) []string {
 func validateResults(results []Result, config TestConfig) int {
 	// Build sets for quick lookup
 	allowSet := make(map[string]struct{})
-	for _, d := range config.RequireAllow {
-		allowSet[d] = struct{}{}
+	for _, dom := range config.RequireAllow {
+		allowSet[dom] = struct{}{}
 	}
 
 	denySet := make(map[string]struct{})
-	for _, d := range config.RequireDeny {
-		denySet[d] = struct{}{}
+	for _, dom := range config.RequireDeny {
+		denySet[dom] = struct{}{}
 	}
 
 	hasError := false
 
-	for i := range results {
-		domain := results[i].Domain
-		status := results[i].Status
+	for idx := range results {
+		domain := results[idx].Domain
+		status := results[idx].Status
 
 		if _, ok := allowSet[domain]; ok {
 			// Domain must be ALLOWED
 			if status == statusAllowed {
-				results[i].TestResult = testResultPass
+				results[idx].TestResult = testResultPass
 			} else {
-				results[i].TestResult = testResultFail
+				results[idx].TestResult = testResultFail
 				hasError = true
 			}
 		} else if _, ok := denySet[domain]; ok {
 			// Domain must be BLOCKED
 			if status == statusBlocked {
-				results[i].TestResult = testResultPass
+				results[idx].TestResult = testResultPass
 			} else {
-				results[i].TestResult = testResultFail
+				results[idx].TestResult = testResultFail
 				hasError = true
 			}
 		} else {
 			// Domain not in any test requirement
-			results[i].TestResult = testResultUndetermined
+			results[idx].TestResult = testResultUndetermined
 		}
 	}
 
@@ -269,21 +270,22 @@ func validateResults(results []Result, config TestConfig) int {
 }
 
 func queryA(server, domain string) Result {
-	m := new(dns.Msg)
-	m.SetQuestion(dns.Fqdn(domain), dns.TypeA)
-	m.RecursionDesired = true
+	msg := new(dns.Msg)
+	msg.SetQuestion(dns.Fqdn(domain), dns.TypeA)
+	msg.RecursionDesired = true
 
-	c := new(dns.Client)
-	c.Timeout = requestTimeout
+	client := new(dns.Client)
+	client.Timeout = requestTimeout
 
 	var lastErr error
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
-		r, _, err := c.Exchange(m, server)
+		resp, _, err := client.Exchange(msg, server)
 		if err != nil {
 			var netErr net.Error
 			if errors.As(err, &netErr) && netErr.Timeout() && attempt < maxRetries {
 				lastErr = err
+
 				time.Sleep(retryDelay)
 
 				continue
@@ -292,18 +294,18 @@ func queryA(server, domain string) Result {
 			return Result{Domain: domain, Status: statusError, Detail: err.Error()}
 		}
 
-		if r.Rcode == dns.RcodeNameError {
+		if resp.Rcode == dns.RcodeNameError {
 			return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN"}
 		}
 
-		if len(r.Answer) == 0 {
+		if len(resp.Answer) == 0 {
 			return Result{Domain: domain, Status: statusBlocked, Detail: "no answer"}
 		}
 
-		for _, ans := range r.Answer {
-			if a, ok := ans.(*dns.A); ok {
-				if a.A.String() != "0.0.0.0" {
-					return Result{Domain: domain, Status: statusAllowed, Detail: a.A.String()}
+		for _, ans := range resp.Answer {
+			if aRec, ok := ans.(*dns.A); ok {
+				if aRec.A.String() != "0.0.0.0" {
+					return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String()}
 				}
 			}
 		}
