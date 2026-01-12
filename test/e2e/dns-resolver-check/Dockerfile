@@ -27,6 +27,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o "/app/dns-resolver-check" .
+RUN \
+    go get -u ./... && \
+    go mod tidy
 
-ENTRYPOINT [ "/app/dns-resolver-check"]
+RUN go build -o "/app/dns-resolver-checker" ./...
+
+ENTRYPOINT [ "/app/dns-resolver-checker"]

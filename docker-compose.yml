@@ -1,0 +1,87 @@
+# Docker Compose file for end-to-end testing with Alotame and Blocky DNS resolver.
+#
+# This file sets up a test environment with three services:
+#   1. Alotame: A simple web server that serves a allowlist text file.
+#   2. Blocky: A DNS resolver that uses Alotame for allowlist-based filtering.
+#   3. E2E: A test service that verifies the functionality of the DNS resolver.
+#
+# For the actual usage see "test-e2e" section in Makefile
+networks:
+  testnet:
+    ipam:
+      config:
+        # Avoid conflict with Docker common subnets
+        - subnet: 10.88.0.0/16
+
+services:
+  # Alotame is a simple Web server that provides a whitelist text file
+  alotame:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alotame
+    hostname: alotame
+    networks:
+      testnet:
+        ipv4_address: 10.88.0.2
+    ports:
+      - "5963:5963/tcp"
+    environment:
+      - TZ=Asia/Tokyo # Change the timezone if needed
+      - DNS_RESOLVER=blocky
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5963/allowlist.txt"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  blocky:
+    image: spx01/blocky
+    container_name: blocky
+    hostname: blocky
+    depends_on:
+      alotame:
+        condition: service_healthy
+    networks:
+      testnet:
+        ipv4_address: 10.88.0.3
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "4000:4000/tcp"
+    environment:
+      - TZ=Asia/Tokyo # Change the timezone if needed
+    restart: unless-stopped
+    volumes:
+      # Synchronize the log timestamp with host
+      - /etc/localtime:/etc/localtime:ro
+      # config file
+      - ./test/e2e/blocky-conf/config.yml:/app/config.yml
+    healthcheck:
+      test: ["CMD", "/app/blocky", "healthcheck"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 5s
+  e2e:
+    build:
+      context: ./test/e2e/dns-resolver-check
+      dockerfile: Dockerfile
+    container_name: e2e
+    hostname: e2e
+    depends_on:
+      alotame:
+        condition: service_healthy
+      blocky:
+        condition: service_healthy
+    networks:
+      testnet:
+        ipv4_address: 10.88.0.4
+    environment:
+      - TZ=Asia/Tokyo # Change the timezone if needed
+    restart: no
+    command: ["blocky:53", "--require_allow", "github.com,example.com,yahoo.com,GitHub.com,github.com.", "--require_deny", "yahoo.co.jp,google.com"]
+    volumes:
+      # Synchronize the log timestamp with host
+      - /etc/localtime:/etc/localtime:ro

@@ -1,19 +1,18 @@
 <!-- markdownlint-disable MD033 -->
 # Alotame
 
-<img src=".github/alotame.png" width=25% align=left alt="Alotame Logo">
-
-A local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management.
+<img src=".github/alotame.png" width=25% align=center alt="Alotame Logo">
 
 > **Blocky blocks. Alotame decides what to allow.**
+> If you have ever thought *“allowlist is safer, but painful”*, this app might be for you.
+
+**Alotame** is a local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management. It simply provides an "allowlist.txt" file for Blocky to enforce and management UI to control it.
 
 ## Intended audience
 
 - Engineers running Blocky at home or local machines
 - Families who want a safer default for web access
-- Anyone tired of maintaining massive blocklists like [us](https://github.com/KEINOS/BlockList)
-
-If you have ever thought *“allowlist is safer, but painful”*, this app is for you.
+- Anyone tired of maintaining massive denylist/blocklists like [us](https://github.com/KEINOS/BlockList)
 
 ## Overview
 

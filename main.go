@@ -21,15 +21,18 @@ import (
 )
 
 // Sample allowlist data (will be replaced with actual data source in the future).
-const allowlist = `exampleA.com
-yahoo.co.jp
-fonts.googleapis.com
+const allowlist = `
+# Sample Allowlist
+github.com
+example.com
+yahoo.com
 `
 
 // Default configuration values.
 const (
-	portDefault = "3965"
-	hostDefault = "localhost"
+	portDefault = "5963"
+	// hostDefault = "localhost" // local run only.
+	hostDefault = "0.0.0.0" // allow external access
 )
 
 // Server timeout configuration.
@@ -120,6 +123,9 @@ func run(prov AllowlistProvider, conf ServerConfig, quit <-chan os.Signal) error
 	serverErr := make(chan error, 1)
 
 	go startServer(server, conf.Addr(), serverErr)
+
+	dummyLen := 16
+	_ = secureHash("test", dummyLen) // dummy call to avoid unused function error. Will implement soon.
 
 	select {
 	case <-quit:
@@ -244,8 +250,6 @@ func fastHash(data string) string {
 // SHAKE256 (SHA3 variant).
 // If the given length is less than or equal to zero, it returns SHA3-256 hash
 // (32 bytes) instead.
-//
-//nolint:unused // will use it soon
 func secureHash(data string, length int) string {
 	if length > 0 {
 		return hex.EncodeToString(sha3.SumSHAKE256([]byte(data), length))
