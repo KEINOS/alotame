@@ -17,7 +17,8 @@ test-e2e:
 	docker compose run --rm e2e
 
 lint:
-	golangci-lint run
+	golangci-lint run ./...
+	golangci-lint run ./test/e2e/dns-resolver-check
 
 # Update dependencies
 update:
