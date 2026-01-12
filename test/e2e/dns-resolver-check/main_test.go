@@ -43,6 +43,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:gochecknoinits // init overrides for testing
 func init() {
 	// Override timeout settings for faster test execution in CI/CD.
 	// Default production values: requestTimeout=3s, maxRetries=3, retryDelay=3s
