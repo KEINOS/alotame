@@ -31,6 +31,7 @@ Before debugging:
  3. Check if the DNS provider made announcements about changes
  4. Consider whether the test needs updating, not the code
 */
+
 package main
 
 import (
