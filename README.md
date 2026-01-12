@@ -1,9 +1,10 @@
 <!-- markdownlint-disable MD033 -->
 # Alotame
 
-<img src=".github/alotame.png" width=25% align=center alt="Alotame Logo">
+<img src=".github/alotame.png" width=25% alt="Alotame Logo">
 
 > **Blocky blocks. Alotame decides what to allow.**
+>
 > If you have ever thought *“allowlist is safer, but painful”*, this app might be for you.
 
 **Alotame** is a local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management. It simply provides an "allowlist.txt" file for Blocky to enforce and management UI to control it.
