@@ -296,8 +296,7 @@ func queryA(server, domain string) Result {
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		resp, _, err := client.Exchange(msg, server)
 		if err != nil {
-			var netErr net.Error
-			if errors.As(err, &netErr) && netErr.Timeout() && attempt < maxRetries {
+			if shouldRetry(err, attempt) {
 				lastErr = err
 
 				time.Sleep(retryDelay)
@@ -308,24 +307,36 @@ func queryA(server, domain string) Result {
 			return Result{Domain: domain, Status: statusError, Detail: err.Error(), TestResult: ""}
 		}
 
-		if resp.Rcode == dns.RcodeNameError {
-			return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""}
-		}
-
-		if len(resp.Answer) == 0 {
-			return Result{Domain: domain, Status: statusBlocked, Detail: "no answer", TestResult: ""}
-		}
-
-		for _, ans := range resp.Answer {
-			if aRec, ok := ans.(*dns.A); ok {
-				if aRec.A.String() != "0.0.0.0" {
-					return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String(), TestResult: ""}
-				}
-			}
-		}
-
-		return Result{Domain: domain, Status: statusBlocked, Detail: "only null IPs", TestResult: ""}
+		return parseResponse(domain, resp)
 	}
 
 	return Result{Domain: domain, Status: statusError, Detail: lastErr.Error(), TestResult: ""}
+}
+
+// shouldRetry determines if a DNS query should be retried based on the error type and attempt count.
+func shouldRetry(err error, attempt int) bool {
+	var netErr net.Error
+
+	return errors.As(err, &netErr) && netErr.Timeout() && attempt < maxRetries
+}
+
+// parseResponse converts a DNS response into a Result.
+func parseResponse(domain string, resp *dns.Msg) Result {
+	if resp.Rcode == dns.RcodeNameError {
+		return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""}
+	}
+
+	if len(resp.Answer) == 0 {
+		return Result{Domain: domain, Status: statusBlocked, Detail: "no answer", TestResult: ""}
+	}
+
+	for _, ans := range resp.Answer {
+		if aRec, ok := ans.(*dns.A); ok {
+			if aRec.A.String() != "0.0.0.0" {
+				return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String(), TestResult: ""}
+			}
+		}
+	}
+
+	return Result{Domain: domain, Status: statusBlocked, Detail: "only null IPs", TestResult: ""}
 }
