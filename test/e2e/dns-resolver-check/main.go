@@ -117,6 +117,10 @@ const (
 	testResultPass         = "PASS"
 	testResultFail         = "FAIL"
 	testResultUndetermined = "UNDETERMINED"
+
+	// minRequiredArgs is the minimum number of command line arguments required.
+	// At least the program name and DNS server address are needed.
+	minRequiredArgs = 2
 )
 
 type Result struct {
@@ -132,7 +136,7 @@ type TestConfig struct {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < minRequiredArgs {
 		log.Fatalf("usage: %s <dns-server:53> [--require_allow domains] [--require_deny domains] [domain...]", os.Args[0])
 	}
 
