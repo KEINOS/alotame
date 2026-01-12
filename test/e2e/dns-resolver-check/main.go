@@ -48,19 +48,19 @@ Examples:
 	    "domain": "github.com",
 	    "status": "ALLOWED",
 	    "detail": "20.27.177.113",
-	    "test_result": "PASS"
+	    "testResult": "PASS"
 	  },
 	  {
 	    "domain": "yahoo.com",
 	    "status": "ALLOWED",
 	    "detail": "74.6.231.21",
-	    "test_result": "PASS"
+	    "testResult": "PASS"
 	  },
 	  {
 	    "domain": "unknowndomain.com",
 	    "status": "BLOCKED",
 	    "detail": "NXDOMAIN",
-	    "test_result": "PASS"
+	    "testResult": "PASS"
 	  }
 	]
 
@@ -71,13 +71,13 @@ Examples:
 	    "domain": "github.com",
 	    "status": "ALLOWED",
 	    "detail": "20.27.177.113",
-	    "test_result": "PASS"
+	    "testResult": "PASS"
 	  },
 	  {
 	    "domain": "extra-query.com",
 	    "status": "BLOCKED",
 	    "detail": "NXDOMAIN",
-	    "test_result": "UNDETERMINED"
+	    "testResult": "UNDETERMINED"
 	  }
 	]
 
@@ -123,7 +123,7 @@ type Result struct {
 	Domain     string `json:"domain"`
 	Status     string `json:"status"`
 	Detail     string `json:"detail"`
-	TestResult string `json:"test_result,omitempty"`
+	TestResult string `json:"testResult,omitempty"`
 }
 
 type TestConfig struct {
@@ -155,7 +155,7 @@ func main() {
 		results = append(results, queryA(server, domain))
 	}
 
-	// Determine exit code and set test_result fields if in test mode
+	// Determine exit code and set testResult fields if in test mode
 	isTestMode := len(config.RequireAllow) > 0 || len(config.RequireDeny) > 0
 	exitCode := 0
 
@@ -237,28 +237,16 @@ func validateResults(results []Result, config TestConfig) int {
 	hasError := false
 
 	for idx := range results {
-		domain := results[idx].Domain
-		status := results[idx].Status
+		testResult, isError := determineTestResult(
+			results[idx].Domain,
+			results[idx].Status,
+			allowSet,
+			denySet,
+		)
+		results[idx].TestResult = testResult
 
-		if _, ok := allowSet[domain]; ok {
-			// Domain must be ALLOWED
-			if status == statusAllowed {
-				results[idx].TestResult = testResultPass
-			} else {
-				results[idx].TestResult = testResultFail
-				hasError = true
-			}
-		} else if _, ok := denySet[domain]; ok {
-			// Domain must be BLOCKED
-			if status == statusBlocked {
-				results[idx].TestResult = testResultPass
-			} else {
-				results[idx].TestResult = testResultFail
-				hasError = true
-			}
-		} else {
-			// Domain not in any test requirement
-			results[idx].TestResult = testResultUndetermined
+		if isError {
+			hasError = true
 		}
 	}
 
@@ -267,6 +255,28 @@ func validateResults(results []Result, config TestConfig) int {
 	}
 
 	return 0
+}
+
+// determineTestResult evaluates a single domain's status against allow/deny requirements.
+// Returns the test result string and whether the result represents a test failure.
+func determineTestResult(domain, status string, allowSet, denySet map[string]struct{}) (string, bool) {
+	if _, ok := allowSet[domain]; ok {
+		if status == statusAllowed {
+			return testResultPass, false
+		}
+
+		return testResultFail, true
+	}
+
+	if _, ok := denySet[domain]; ok {
+		if status == statusBlocked {
+			return testResultPass, false
+		}
+
+		return testResultFail, true
+	}
+
+	return testResultUndetermined, false
 }
 
 func queryA(server, domain string) Result {
