@@ -35,6 +35,7 @@ Before debugging:
 package main
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -302,7 +303,7 @@ func TestE2ETestMode_Integration(t *testing.T) {
 			RequireDeny:  []string{"this-domain-definitely-does-not-exist-xyz123.com"},
 		}
 
-		allDomains := append(config.RequireAllow, config.RequireDeny...)
+		allDomains := slices.Concat(config.RequireAllow, config.RequireDeny)
 
 		results := make([]Result, 0, len(allDomains))
 		for _, domain := range allDomains {
