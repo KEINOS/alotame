@@ -311,13 +311,13 @@ func queryA(server, domain string) Result {
 				continue
 			}
 
-			return Result{Domain: domain, Status: statusError, Detail: err.Error(), TestResult: ""}
+			return Result{Domain: domain, Status: statusError, Detail: err.Error(), ExpectResult: "", TestResult: ""}
 		}
 
 		return parseResponse(domain, resp)
 	}
 
-	return Result{Domain: domain, Status: statusError, Detail: lastErr.Error(), TestResult: ""}
+	return Result{Domain: domain, Status: statusError, Detail: lastErr.Error(), ExpectResult: "", TestResult: ""}
 }
 
 // shouldRetry determines if a DNS query should be retried based on the error type and attempt count.
@@ -330,20 +330,20 @@ func shouldRetry(err error, attempt int) bool {
 // parseResponse converts a DNS response into a Result.
 func parseResponse(domain string, resp *dns.Msg) Result {
 	if resp.Rcode == dns.RcodeNameError {
-		return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""}
+		return Result{Domain: domain, Status: statusBlocked, Detail: "NXDOMAIN", ExpectResult: "", TestResult: ""}
 	}
 
 	if len(resp.Answer) == 0 {
-		return Result{Domain: domain, Status: statusBlocked, Detail: "no answer", TestResult: ""}
+		return Result{Domain: domain, Status: statusBlocked, Detail: "no answer", ExpectResult: "", TestResult: ""}
 	}
 
 	for _, ans := range resp.Answer {
 		if aRec, ok := ans.(*dns.A); ok {
 			if aRec.A.String() != "0.0.0.0" {
-				return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String(), TestResult: ""}
+				return Result{Domain: domain, Status: statusAllowed, Detail: aRec.A.String(), ExpectResult: "", TestResult: ""}
 			}
 		}
 	}
 
-	return Result{Domain: domain, Status: statusBlocked, Detail: "only null IPs", TestResult: ""}
+	return Result{Domain: domain, Status: statusBlocked, Detail: "only null IPs", ExpectResult: "", TestResult: ""}
 }
