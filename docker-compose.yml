@@ -1,5 +1,9 @@
 # Docker Compose file for end-to-end testing with Alotame and Blocky DNS resolver.
 #
+# NOTE: Ports are not exposed to the host because DNS resolution tests are
+# performed entirely within the Docker network. All services communicate via
+# internal container names.
+#
 # This file sets up a test environment with three services:
 #   1. Alotame: A simple web server that serves a allowlist text file.
 #   2. Blocky: A DNS resolver that uses Alotame for allowlist-based filtering.
@@ -24,8 +28,8 @@ services:
     networks:
       testnet:
         ipv4_address: 10.88.0.2
-    ports:
-      - "5963:5963/tcp"
+    # ports:
+    #   - "5963:5963/tcp"
     environment:
       - TZ=Asia/Tokyo # Change the timezone if needed
       - DNS_RESOLVER=blocky
@@ -46,10 +50,10 @@ services:
     networks:
       testnet:
         ipv4_address: 10.88.0.3
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "4000:4000/tcp"
+    # ports:
+    #   - "53:53/tcp"
+    #   - "53:53/udp"
+    #   - "4000:4000/tcp"
     environment:
       - TZ=Asia/Tokyo # Change the timezone if needed
     restart: unless-stopped
