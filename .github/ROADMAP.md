@@ -88,5 +88,6 @@
 
 - [ ] Error handling when Blocky is unreachable
 - [ ] Logging and monitoring support
+  - [ ] Reduce log verbosity for repeated requests (use debug level or log only on changes)
 - [ ] Rate limiting for UI access on failed login attempts
 - [ ] Support for multiple users with separate allowlists
