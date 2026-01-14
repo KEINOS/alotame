@@ -144,17 +144,18 @@ func main() {
 	config, domains := parseArgs(os.Args[2:])
 
 	// Collect all domains to query
-	allDomains := make([]string, 0)
+	lenAllDomains := len(config.RequireAllow) + len(config.RequireDeny) + len(domains)
+	if lenAllDomains == 0 {
+		log.Fatalf("no domains specified")
+	}
+
+	allDomains := make([]string, 0, lenAllDomains)
 	allDomains = append(allDomains, config.RequireAllow...)
 	allDomains = append(allDomains, config.RequireDeny...)
 	allDomains = append(allDomains, domains...)
 
-	if len(allDomains) == 0 {
-		log.Fatalf("no domains specified")
-	}
-
 	// Query all domains
-	results := make([]Result, 0, len(allDomains))
+	results := make([]Result, 0, lenAllDomains)
 	for _, domain := range allDomains {
 		results = append(results, queryA(server, domain))
 	}

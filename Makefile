@@ -10,8 +10,14 @@ test-main:
 test-tool:
 	@echo "* TOOL test:"; go test -short ./test/e2e/dns-resolver-check/...
 
+# Check if Docker is installed and running
+check-docker:
+	@command -v docker >/dev/null 2>&1 || { echo "Error: Docker is not installed. Please install Docker first."; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "Error: Docker daemon is not running. Please start Docker first."; exit 1; }
+	@echo "Docker is installed and running."
+
 # E2E integration test
-test-e2e: test
+test-e2e: check-docker test
 	@trap 'rc=$$?; docker compose down --remove-orphans; exit $$rc' EXIT INT TERM; \
 	docker compose pull && \
 	docker compose build && \
@@ -23,11 +29,11 @@ lint: lint-main lint-tool
 
 lint-main:
 	@echo "* MAIN lint: golangci-lint run --fix ./..."
-	@golangci-lint run --fix ./... 2>&1 | grep "0\ issues." || exit 1
+	@golangci-lint run --fix ./...
 
 lint-tool:
 	@echo "* TOOL lint: golangci-lint run --fix ./test/e2e/dns-resolver-check"
-	@golangci-lint run --fix ./test/e2e/dns-resolver-check 2>&1 | grep "0\ issues." || exit 1
+	@golangci-lint run --fix ./test/e2e/dns-resolver-check
 
 # Update dependencies
 update:
