@@ -89,6 +89,7 @@ func TestStaticAllowlistProvider_Get_canceled_context(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Nil(t, data)
+	assert.ErrorIs(t, err, context.Canceled, "expected context.Canceled")
 	assert.Contains(t, err.Error(), "context retrieval failed")
 }
 
