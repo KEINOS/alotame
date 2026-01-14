@@ -193,6 +193,13 @@ func newHTTPServer(conf ServerConfig, handler http.Handler) *http.Server {
 
 func newAllowlistHandler(prov AllowlistProvider) http.HandlerFunc {
 	return func(respW http.ResponseWriter, req *http.Request) {
+		// Only allow GET requests (defense-in-depth, also enforced at router level)
+		if req.Method != http.MethodGet {
+			http.Error(respW, "method not allowed", http.StatusMethodNotAllowed)
+
+			return
+		}
+
 		respW.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 		rawETag, err := prov.Hash()

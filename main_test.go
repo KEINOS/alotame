@@ -163,6 +163,34 @@ func TestNewAllowlistHandler_get_error(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "failed to load allowlist")
 }
 
+func TestNewAllowlistHandler_method_not_allowed(t *testing.T) {
+	t.Parallel()
+
+	prov := &fakeAllowlistProvider{
+		data:    []byte("example.com\n"),
+		hash:    "somehash",
+		getErr:  nil,
+		hashErr: nil,
+	}
+	handler := newAllowlistHandler(prov)
+
+	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
+
+	for _, method := range methods {
+		t.Run(method, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(method, "/allowlist.txt", nil)
+			rec := httptest.NewRecorder()
+
+			handler(rec, req)
+
+			assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
+			assert.Contains(t, rec.Body.String(), "method not allowed")
+		})
+	}
+}
+
 func TestNewAllowlistHandler_if_none_match(t *testing.T) {
 	t.Parallel()
 
