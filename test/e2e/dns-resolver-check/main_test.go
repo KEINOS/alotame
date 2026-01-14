@@ -54,6 +54,115 @@ func init() {
 	retryDelay = 0
 }
 
+// validateResultsTestCase holds a single test case for TestValidateResults.
+type validateResultsTestCase struct {
+	name             string
+	results          []Result
+	config           TestConfig
+	expectedExitCode int
+	expectedResults  []string
+}
+
+// ----------------------------------------------------------------------------
+//  Data Providers for Tests
+// ----------------------------------------------------------------------------
+
+// dataValidateResultsTestCases contains test cases for validateResults.
+//
+//nolint:gochecknoglobals // test data provider
+var dataValidateResultsTestCases = []validateResultsTestCase{
+	{
+		name: "all pass - allow check",
+		results: []Result{{
+			Domain: "allowed.com", Status: statusAllowed, Detail: "1.2.3.4",
+			ExpectResult: "", TestResult: "",
+		}},
+		config:           TestConfig{RequireAllow: []string{"allowed.com"}, RequireDeny: nil},
+		expectedExitCode: 0,
+		expectedResults:  []string{testResultPass},
+	},
+	{
+		name: "all pass - deny check",
+		results: []Result{{
+			Domain: "blocked.com", Status: statusBlocked, Detail: "NXDOMAIN",
+			ExpectResult: "", TestResult: "",
+		}},
+		config:           TestConfig{RequireAllow: nil, RequireDeny: []string{"blocked.com"}},
+		expectedExitCode: 0,
+		expectedResults:  []string{testResultPass},
+	},
+	{
+		name: "fail - expected allow but got blocked",
+		results: []Result{{
+			Domain: "shouldallow.com", Status: statusBlocked, Detail: "NXDOMAIN",
+			ExpectResult: "", TestResult: "",
+		}},
+		config:           TestConfig{RequireAllow: []string{"shouldallow.com"}, RequireDeny: nil},
+		expectedExitCode: 1,
+		expectedResults:  []string{testResultFail},
+	},
+	{
+		name: "fail - expected deny but got allowed",
+		results: []Result{{
+			Domain: "shouldblock.com", Status: statusAllowed, Detail: "1.2.3.4",
+			ExpectResult: "", TestResult: "",
+		}},
+		config:           TestConfig{RequireAllow: nil, RequireDeny: []string{"shouldblock.com"}},
+		expectedExitCode: 1,
+		expectedResults:  []string{testResultFail},
+	},
+	{
+		name: "mixed results with undetermined",
+		results: []Result{
+			{
+				Domain: "allow.com", Status: statusAllowed, Detail: "1.2.3.4",
+				ExpectResult: "", TestResult: "",
+			},
+			{
+				Domain: "deny.com", Status: statusBlocked, Detail: "NXDOMAIN",
+				ExpectResult: "", TestResult: "",
+			},
+			{
+				Domain: "extra.com", Status: statusAllowed, Detail: "5.6.7.8",
+				ExpectResult: "", TestResult: "",
+			},
+		},
+		config:           TestConfig{RequireAllow: []string{"allow.com"}, RequireDeny: []string{"deny.com"}},
+		expectedExitCode: 0,
+		expectedResults:  []string{testResultPass, testResultPass, testResultUndetermined},
+	},
+	{
+		name: "partial failure",
+		results: []Result{
+			{
+				Domain: "good.com", Status: statusAllowed, Detail: "1.2.3.4",
+				ExpectResult: "", TestResult: "",
+			},
+			{
+				Domain: "bad.com", Status: statusBlocked, Detail: "NXDOMAIN",
+				ExpectResult: "", TestResult: "",
+			},
+		},
+		config:           TestConfig{RequireAllow: []string{"good.com", "bad.com"}, RequireDeny: nil},
+		expectedExitCode: 1,
+		expectedResults:  []string{testResultPass, testResultFail},
+	},
+}
+
+// ----------------------------------------------------------------------------
+//  Helpers for Tests
+// ----------------------------------------------------------------------------
+
+// queryAllDomains queries multiple domains and returns the results.
+func queryAllDomains(server string, domains []string) []Result {
+	results := make([]Result, 0, len(domains))
+	for _, domain := range domains {
+		results = append(results, queryA(server, domain))
+	}
+
+	return results
+}
+
 // ----------------------------------------------------------------------------
 //  Unit Tests (no network required)
 // ----------------------------------------------------------------------------
@@ -164,74 +273,10 @@ func TestParseArgs(t *testing.T) {
 	}
 }
 
-// validateResultsTestCase holds a single test case for TestValidateResults.
-type validateResultsTestCase struct {
-	name             string
-	results          []Result
-	config           TestConfig
-	expectedExitCode int
-	expectedResults  []string
-}
-
-// getValidateResultsTestCases returns test cases for validateResults.
-func getValidateResultsTestCases() []validateResultsTestCase {
-	return []validateResultsTestCase{
-		{
-			name:             "all pass - allow check",
-			results:          []Result{{Domain: "allowed.com", Status: statusAllowed, Detail: "1.2.3.4", TestResult: ""}},
-			config:           TestConfig{RequireAllow: []string{"allowed.com"}, RequireDeny: nil},
-			expectedExitCode: 0,
-			expectedResults:  []string{testResultPass},
-		},
-		{
-			name:             "all pass - deny check",
-			results:          []Result{{Domain: "blocked.com", Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""}},
-			config:           TestConfig{RequireAllow: nil, RequireDeny: []string{"blocked.com"}},
-			expectedExitCode: 0,
-			expectedResults:  []string{testResultPass},
-		},
-		{
-			name:             "fail - expected allow but got blocked",
-			results:          []Result{{Domain: "shouldallow.com", Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""}},
-			config:           TestConfig{RequireAllow: []string{"shouldallow.com"}, RequireDeny: nil},
-			expectedExitCode: 1,
-			expectedResults:  []string{testResultFail},
-		},
-		{
-			name:             "fail - expected deny but got allowed",
-			results:          []Result{{Domain: "shouldblock.com", Status: statusAllowed, Detail: "1.2.3.4", TestResult: ""}},
-			config:           TestConfig{RequireAllow: nil, RequireDeny: []string{"shouldblock.com"}},
-			expectedExitCode: 1,
-			expectedResults:  []string{testResultFail},
-		},
-		{
-			name: "mixed results with undetermined",
-			results: []Result{
-				{Domain: "allow.com", Status: statusAllowed, Detail: "1.2.3.4", TestResult: ""},
-				{Domain: "deny.com", Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""},
-				{Domain: "extra.com", Status: statusAllowed, Detail: "5.6.7.8", TestResult: ""},
-			},
-			config:           TestConfig{RequireAllow: []string{"allow.com"}, RequireDeny: []string{"deny.com"}},
-			expectedExitCode: 0,
-			expectedResults:  []string{testResultPass, testResultPass, testResultUndetermined},
-		},
-		{
-			name: "partial failure",
-			results: []Result{
-				{Domain: "good.com", Status: statusAllowed, Detail: "1.2.3.4", TestResult: ""},
-				{Domain: "bad.com", Status: statusBlocked, Detail: "NXDOMAIN", TestResult: ""},
-			},
-			config:           TestConfig{RequireAllow: []string{"good.com", "bad.com"}, RequireDeny: nil},
-			expectedExitCode: 1,
-			expectedResults:  []string{testResultPass, testResultFail},
-		},
-	}
-}
-
 func TestValidateResults(t *testing.T) {
 	t.Parallel()
 
-	for _, test := range getValidateResultsTestCases() {
+	for _, test := range dataValidateResultsTestCases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -282,16 +327,6 @@ func TestQueryA_Integration(t *testing.T) {
 		assert.Equal(t, statusBlocked, result.Status)
 		assert.Equal(t, "NXDOMAIN", result.Detail)
 	})
-}
-
-// queryAllDomains queries multiple domains and returns the results.
-func queryAllDomains(server string, domains []string) []Result {
-	results := make([]Result, 0, len(domains))
-	for _, domain := range domains {
-		results = append(results, queryA(server, domain))
-	}
-
-	return results
 }
 
 func TestE2ETestMode_Integration(t *testing.T) {
@@ -353,7 +388,7 @@ func TestE2ETestMode_Integration(t *testing.T) {
 	})
 }
 
-func TestLegacyMode_NoTestResult(t *testing.T) {
+func TestSimpleQueryMode_NoTestResult(t *testing.T) {
 	t.Parallel()
 
 	if testing.Short() {
