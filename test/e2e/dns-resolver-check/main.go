@@ -48,18 +48,21 @@ Examples:
 	    "domain": "github.com",
 	    "status": "ALLOWED",
 	    "detail": "20.27.177.113",
+	    "expectResult": "ALLOWED",
 	    "testResult": "PASS"
 	  },
 	  {
 	    "domain": "yahoo.com",
 	    "status": "ALLOWED",
 	    "detail": "74.6.231.21",
+	    "expectResult": "ALLOWED",
 	    "testResult": "PASS"
 	  },
 	  {
 	    "domain": "unknowndomain.com",
 	    "status": "BLOCKED",
 	    "detail": "NXDOMAIN",
+	    "expectResult": "BLOCKED",
 	    "testResult": "PASS"
 	  }
 	]
@@ -71,6 +74,7 @@ Examples:
 	    "domain": "github.com",
 	    "status": "ALLOWED",
 	    "detail": "20.27.177.113",
+	    "expectResult": "ALLOWED",
 	    "testResult": "PASS"
 	  },
 	  {
@@ -124,10 +128,11 @@ const (
 )
 
 type Result struct {
-	Domain     string `json:"domain"`
-	Status     string `json:"status"`
-	Detail     string `json:"detail"`
-	TestResult string `json:"testResult,omitempty"`
+	Domain       string `json:"domain"`
+	Status       string `json:"status"`
+	Detail       string `json:"detail"`
+	ExpectResult string `json:"expectResult,omitempty"`
+	TestResult   string `json:"testResult,omitempty"`
 }
 
 type TestConfig struct {
@@ -242,12 +247,13 @@ func validateResults(results []Result, config TestConfig) int {
 	hasError := false
 
 	for idx := range results {
-		testResult, isError := determineTestResult(
+		expectResult, testResult, isError := determineTestResult(
 			results[idx].Domain,
 			results[idx].Status,
 			allowSet,
 			denySet,
 		)
+		results[idx].ExpectResult = expectResult
 		results[idx].TestResult = testResult
 
 		if isError {
@@ -263,25 +269,25 @@ func validateResults(results []Result, config TestConfig) int {
 }
 
 // determineTestResult evaluates a single domain's status against allow/deny requirements.
-// Returns the test result string and whether the result represents a test failure.
-func determineTestResult(domain, status string, allowSet, denySet map[string]struct{}) (string, bool) {
+// Returns the expected result, test result string, and whether the result represents a test failure.
+func determineTestResult(domain, status string, allowSet, denySet map[string]struct{}) (string, string, bool) {
 	if _, ok := allowSet[domain]; ok {
 		if status == statusAllowed {
-			return testResultPass, false
+			return statusAllowed, testResultPass, false
 		}
 
-		return testResultFail, true
+		return statusAllowed, testResultFail, true
 	}
 
 	if _, ok := denySet[domain]; ok {
 		if status == statusBlocked {
-			return testResultPass, false
+			return statusBlocked, testResultPass, false
 		}
 
-		return testResultFail, true
+		return statusBlocked, testResultFail, true
 	}
 
-	return testResultUndetermined, false
+	return "", testResultUndetermined, false
 }
 
 func queryA(server, domain string) Result {
