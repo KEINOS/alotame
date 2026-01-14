@@ -89,7 +89,7 @@ func TestStaticAllowlistProvider_Get_canceled_context(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Nil(t, data)
-	assert.ErrorIs(t, err, context.Canceled, "expected context.Canceled")
+	require.ErrorIs(t, err, context.Canceled, "expected context.Canceled")
 	assert.Contains(t, err.Error(), "context retrieval failed")
 }
 
@@ -177,15 +177,49 @@ func TestNewAllowlistHandler_if_none_match(t *testing.T) {
 	}
 	handler := newAllowlistHandler(prov)
 
-	req := httptest.NewRequest(http.MethodGet, "/allowlist.txt", nil)
-	req.Header.Set("If-None-Match", `"`+hash+`"`)
+	tests := []struct {
+		name           string
+		ifNoneMatch    string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:           "ETag matches - return 304",
+			ifNoneMatch:    `"` + hash + `"`,
+			expectedStatus: http.StatusNotModified,
+			expectedBody:   "",
+		},
+		{
+			name:           "ETag does not match - return 200",
+			ifNoneMatch:    `"different-hash"`,
+			expectedStatus: http.StatusOK,
+			expectedBody:   data,
+		},
+		{
+			name:           "No If-None-Match header - return 200",
+			ifNoneMatch:    "",
+			expectedStatus: http.StatusOK,
+			expectedBody:   data,
+		},
+	}
 
-	rec := httptest.NewRecorder()
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 
-	handler(rec, req)
+			req := httptest.NewRequest(http.MethodGet, "/allowlist.txt", nil)
+			if test.ifNoneMatch != "" {
+				req.Header.Set("If-None-Match", test.ifNoneMatch)
+			}
 
-	assert.Equal(t, http.StatusNotModified, rec.Code)
-	assert.Empty(t, rec.Body.String())
+			rec := httptest.NewRecorder()
+
+			handler(rec, req)
+
+			assert.Equal(t, test.expectedStatus, rec.Code)
+			assert.Equal(t, test.expectedBody, rec.Body.String())
+		})
+	}
 }
 
 // ============================================================================
