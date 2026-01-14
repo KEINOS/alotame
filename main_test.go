@@ -43,6 +43,7 @@ func TestDefaultServerConfig(t *testing.T) {
 
 	conf := DefaultServerConfig()
 
+	require.NotEmpty(t, conf)
 	assert.Equal(t, hostDefault, conf.Host)
 	assert.Equal(t, portDefault, conf.Port)
 	assert.Equal(t, readHeaderTimeout, conf.ReadHeaderTimeout)
@@ -209,6 +210,32 @@ func TestWrapError_nil_error(t *testing.T) {
 	wrappedErr := wrapError(nil, "operation failed")
 
 	assert.NoError(t, wrappedErr)
+}
+
+// Error determination (error.Is) test for context.Canceled.
+func TestWrapError_ContextCanceled(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // immediately cancel the context
+
+	err := wrapError(ctx.Err(), "context retrieval failed")
+
+	require.ErrorIs(t, err, context.Canceled, "expected context.Canceled")
+}
+
+// Error determination (error.Is) test for context.DeadlineExceeded.
+func TestWrapError_DeadlineExceeded(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	time.Sleep(1 * time.Millisecond)
+
+	err := wrapError(ctx.Err(), "timeout")
+
+	require.ErrorIs(t, err, context.DeadlineExceeded, "expected context.DeadlineExceeded")
 }
 
 // ============================================================================
