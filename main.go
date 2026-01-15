@@ -48,28 +48,33 @@ const (
 //  Types and Interfaces
 // ============================================================================
 
+// AllowlistSnapshot holds the allowlist data and its ETag together to ensure
+// consistency between the data and its hash.
+type AllowlistSnapshot struct {
+	Data []byte
+	ETag string
+}
+
 // AllowlistProvider defines an interface for fetching allowlist data.
 type AllowlistProvider interface {
-	Get(ctx context.Context) ([]byte, error)
-	Hash() (string, error)
+	// Snapshot returns the current allowlist data and its ETag atomically.
+	// This ensures consistency between the data and its hash.
+	Snapshot(ctx context.Context) (AllowlistSnapshot, error)
 }
 
 // StaticAllowlistProvider returns a static allowlist data.
 type StaticAllowlistProvider struct{}
 
-// Get returns the static allowlist data.
-func (prov *StaticAllowlistProvider) Get(ctx context.Context) ([]byte, error) {
+// Snapshot returns the static allowlist data and its ETag.
+func (prov *StaticAllowlistProvider) Snapshot(ctx context.Context) (AllowlistSnapshot, error) {
 	if ctx.Err() != nil {
-		return nil, wrapError(ctx.Err(), "context retrieval failed")
+		return AllowlistSnapshot{}, wrapError(ctx.Err(), "context retrieval failed")
 	}
 
-	return []byte(allowlist), nil
-}
+	data := []byte(allowlist)
+	etag := fastHash(allowlist)
 
-// Hash returns the current hash of the allowlist data.
-// This hash is used for cache validation and not for security purposes.
-func (prov *StaticAllowlistProvider) Hash() (string, error) {
-	return fastHash(allowlist), nil
+	return AllowlistSnapshot{Data: data, ETag: etag}, nil
 }
 
 // ServerConfig holds the configuration for the HTTP server.
@@ -202,15 +207,16 @@ func newAllowlistHandler(prov AllowlistProvider) http.HandlerFunc {
 
 		respW.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-		rawETag, err := prov.Hash()
+		// Get snapshot atomically to ensure data and ETag consistency
+		snap, err := prov.Snapshot(req.Context())
 		if err != nil {
-			http.Error(respW, "failed to get ETag of allowlist",
+			http.Error(respW, "failed to load allowlist",
 				http.StatusInternalServerError)
 
 			return
 		}
 
-		etag := `"` + rawETag + `"`
+		etag := `"` + snap.ETag + `"`
 
 		// As of 2026-01-11, Blocky does not support ETag-based caching.
 		// However, we implement it here for future compatibility.
@@ -223,18 +229,9 @@ func newAllowlistHandler(prov AllowlistProvider) http.HandlerFunc {
 
 		respW.Header().Set("ETag", etag)
 		respW.Header().Set("Cache-Control", "no-cache")
-
-		data, err := prov.Get(req.Context())
-		if err != nil {
-			http.Error(respW, "failed to load allowlist",
-				http.StatusInternalServerError)
-
-			return
-		}
-
 		respW.WriteHeader(http.StatusOK)
 
-		_, err = respW.Write(data)
+		_, err = respW.Write(snap.Data)
 		if err != nil {
 			slog.Error("failed to write response", "error", err)
 
@@ -242,7 +239,7 @@ func newAllowlistHandler(prov AllowlistProvider) http.HandlerFunc {
 		}
 
 		slog.Info("served allowlist",
-			"size", len(data), "remote_addr", req.RemoteAddr)
+			"size", len(snap.Data), "remote_addr", req.RemoteAddr)
 	}
 }
 

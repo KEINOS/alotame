@@ -25,13 +25,17 @@ type fakeAllowlistProvider struct {
 	hashErr error
 }
 
-// Get returns predefined data or error for testing purposes.
-func (f *fakeAllowlistProvider) Get(_ context.Context) ([]byte, error) {
-	return f.data, f.getErr
-}
+// Snapshot returns predefined data and hash or error for testing purposes.
+func (f *fakeAllowlistProvider) Snapshot(_ context.Context) (AllowlistSnapshot, error) {
+	if f.getErr != nil {
+		return AllowlistSnapshot{}, f.getErr
+	}
 
-func (f *fakeAllowlistProvider) Hash() (string, error) {
-	return f.hash, f.hashErr
+	if f.hashErr != nil {
+		return AllowlistSnapshot{}, f.hashErr
+	}
+
+	return AllowlistSnapshot{Data: f.data, ETag: f.hash}, nil
 }
 
 // ============================================================================
@@ -67,28 +71,29 @@ func TestServerConfig_Addr(t *testing.T) {
 //  Tests for StaticAllowlistProvider
 // ============================================================================
 
-func TestStaticAllowlistProvider_Get(t *testing.T) {
+func TestStaticAllowlistProvider_Snapshot(t *testing.T) {
 	t.Parallel()
 
 	prov := new(StaticAllowlistProvider)
 
-	data, err := prov.Get(context.Background())
+	snap, err := prov.Snapshot(context.Background())
 
 	require.NoError(t, err)
-	assert.Equal(t, []byte(allowlist), data)
+	assert.Equal(t, []byte(allowlist), snap.Data)
+	assert.NotEmpty(t, snap.ETag)
 }
 
-func TestStaticAllowlistProvider_Get_canceled_context(t *testing.T) {
+func TestStaticAllowlistProvider_Snapshot_canceled_context(t *testing.T) {
 	t.Parallel()
 
 	prov := new(StaticAllowlistProvider)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	data, err := prov.Get(ctx)
+	snap, err := prov.Snapshot(ctx)
 
 	require.Error(t, err)
-	assert.Nil(t, data)
+	assert.Empty(t, snap.Data)
 	require.ErrorIs(t, err, context.Canceled, "expected context.Canceled")
 	assert.Contains(t, err.Error(), "context retrieval failed")
 }
@@ -140,7 +145,8 @@ func TestNewAllowlistHandler_hash_error(t *testing.T) {
 	handler(rec, req)
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
-	assert.Contains(t, rec.Body.String(), "failed to get ETag")
+	// Now both hashErr and getErr are treated as load error
+	assert.Contains(t, rec.Body.String(), "failed to load allowlist")
 }
 
 func TestNewAllowlistHandler_get_error(t *testing.T) {
