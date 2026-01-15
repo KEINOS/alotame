@@ -10,7 +10,7 @@
 
 - [x] Provide allowlist endpoint "/allowlist.txt" to export current allowlist
   - [ ] Refactor to be testable
-  - [ ] Add unit tests and CI (GitHub Actions)
+  - [x] Add unit tests and CI (GitHub Actions)
 - [ ] Load allowlist from external file instead of hardcoded const
 - [ ] Integrate with Blocky API to fetch blocked domains log
 - [ ] Provide domain validation before adding to allowlist
@@ -74,14 +74,17 @@
 
 ## Testing & CI
 
-- [ ] Add unit tests for handlers
-- [ ] Add integration tests for public endpoints
-- [ ] Set up GitHub Actions for CI/CD
-- [ ] Add golangci-lint to CI pipeline
+- [x] Add unit tests for handlers
+- [x] Add integration tests for public endpoints --> `make test-e2e`
+- [x] Set up GitHub Actions for CI/CD
+- [x] Add golangci-lint to CI pipeline
 
 ## Automated Releases
 
 - [ ] Set up GitHub Actions to build and publish binaries on new releases
+  - Support OS: Linux, macOS, and Windows
+  - Support Architectures: amd64, arm64
+- [ ] Provide Docker image build and publish on new releases
 - [ ] Provide Homebrew tap for macOS and Linux (Linuxbrew) users
 
 ## Future Enhancements
@@ -90,4 +93,4 @@
 - [ ] Logging and monitoring support
   - [ ] Reduce log verbosity for repeated requests (use debug level or log only on changes)
 - [ ] Rate limiting for UI access on failed login attempts
-- [ ] Support for multiple users with separate allowlists
+- [ ] Support for multiple users with separate allowlists (meybe too much for the scope?)
