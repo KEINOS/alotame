@@ -60,7 +60,7 @@ All data stays local. Decisions stay yours.
 
 “Alotame” is a light piece of wordplay.
 
-It blends the Japanese word 「改め」(aratame), meaning “to revise” or “to put in order,”
+It blends the Japanese word 「[改め](https://en.wiktionary.org/wiki/%E3%81%82%E3%82%89%E3%81%9F%E3%82%81%E3%82%8B#Japanese)」(`aratame`, `[àrátáꜜmè]`), meaning “to revise” or “to put in order,”
 with the English words “allow” and “tame”.
 
 The name loosely evokes the idea of a 「関所」(sekisho)—a checkpoint that quietly decides what may pass.
@@ -69,7 +69,7 @@ Nothing grand, just a small gate doing its job.
 ## Contributions
 
 - [CONTRIBUTING.md](./.github/CONTRIBUTING.md)
-- [ROADMAP.md](./.github/ROADMAP.md)
+- [ROADMAP.md](./.github/ROADMAP.md) (TODOs and planned features)
 
 ### Status
 
