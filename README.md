@@ -1,65 +1,75 @@
 <!-- markdownlint-disable MD033 -->
 # Alotame
 
+> [!WARNING]
+> [WIP] 🚧 Under active development.
+
 <img src=".github/alotame.png" width=25% alt="Alotame Logo">
 
-> **Blocky blocks. Alotame decides what to allow.**
->
-> If you have ever thought *“allowlist is safer, but painful”*, this app might be for you.
+> **Blocky blocks. Alotame tells blocky what to allow.**
 
-**Alotame** is a local web app for **allowlist-first** [Blocky](https://github.com/0xERR0R/blocky) DNS management. It simply provides an "allowlist.txt" file endpoint and a web UI to manage it.
+**Alotame** is a small local web app that manages an **allowlist** for [Blocky](https://github.com/0xERR0R/blocky) DNS.
 
-## Intended audience
+It provides:
 
-- Engineers running Blocky at home or local machines
-- Families who want a safer default for web access
-- Anyone tired of maintaining massive denylist/blocklists like [us](https://github.com/KEINOS/BlockList)
+- a plain `allowlist.txt` endpoint for Blocky
+- a simple web UI to maintain that list
+
+Nothing more, nothing hidden.
+
+## Who this is for
+
+- Engineers running Blocky at home or on local machines
+- People managing shared networks for families or multi-generation households
+- Anyone exhausted by maintaining ever-growing deny/blocklists like [us](https://github.com/KEINOS/BlockList)
 
 ## Overview
 
-- A companion app for Blocky to manage allowlist under your control
-- Admin web UI to:
-  - Inspect blocked domains from Blocky logs
-  - Simple allowlist management (view, add, remove)
-  - TOTP-based authentication to sign in securely
+Alotame works *alongside* Blocky.
 
-Blocky remains the DNS enforcement layer. Alotame only manages the allowlist.
+- Blocky remains the DNS server and enforcement layer
+- Alotame only manages the allowlist
 
-## Use Case
+The admin UI lets you:
 
-Blocklists are a never-ending chase.
-Allowlists are proactive and safer—but hard to live with in practice.
+- review domains Blocky has blocked
+- add or remove entries from the allowlist
+- sign in securely using TOTP
 
-An allowlist-first approach flips this model: Block everything by default, and only allow what you trust.
+## Why allowlists
 
-It creates a safer and more predictable model for controlling network access.
+Large blocklists need constant updates and still miss edge cases.
 
-The remaining problem is usability.
-Running Blocky in allowlist-first mode is secure by design, but painful to operate in practice.
+An allowlist-first approach is simpler:
 
-Alotame shows what was blocked and lets you decide what should be allowed—with intention.
+- block by default
+- allow only what you explicitly trust
+- adjust calmly, based on actual usage
 
-## What This Is NOT
+Alotame is designed to make this practical without turning DNS management into a daily chore.
 
-- Not a DNS server (use Blocky)
-- Not a cloud service (runs locally)
-- Not a parental surveillance tool
+## What this is not
+
+- Not a DNS server
+- Not a cloud service
+- Not a monitoring or surveillance product
+
+All data stays local. Decisions stay yours.
 
 ## About the name “Alotame”
 
-Alotame is a piece of wordplay combining the Japanese word 「改め」(aratame) with the English words “allow” and “tame”.
+“Alotame” is a light piece of wordplay.
 
-「改め」(aratame) means “to revise” or “to make things right,” and loosely evokes the idea of a 「関所」(sekisho)—a checkpoint that decides what may pass.
-Together with “allow” and “tame,” the name suggests gently controlling what gets through.
+It blends the Japanese word 「改め」(aratame), meaning “to revise” or “to put in order,”
+with the English words “allow” and “tame”.
 
-It’s not meant to be deep—just a playful name that fits a tool which carefully decides what to allow.
+The name loosely evokes the idea of a 「関所」(sekisho)—a checkpoint that quietly decides what may pass.
+Nothing grand, just a small gate doing its job.
 
 ## Contributions
 
-- Contribution guidelines:
-  - [CONTRIBUTING.md](./.github/CONTRIBUTING.md)
-- Planned features and improvements:
-  - [ROADMAP.md](./.github/ROADMAP.md)
+- [CONTRIBUTING.md](./.github/CONTRIBUTING.md)
+- [ROADMAP.md](./.github/ROADMAP.md)
 
 ### Status
 
